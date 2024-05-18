@@ -1,1 +1,8 @@
 /home/samu2505/HACKATHONS/Plastic-Optics/optics-env
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+# WandB
+wandb/
+artifact/
