@@ -50,6 +50,7 @@ tsfm = T.Compose([
                 std=[0.229, 0.224, 0.225])
 ])
 
+@st.cache(allow_output_mutation=True)
 def inference_pipeline(img_path, transform=tsfm):
     image = PIL.Image.open(img_path)
     tensor_image = transform(image).unsqueeze(0)
@@ -90,12 +91,14 @@ def visualize_predictions(image, mask):
 
     # Use Streamlit's function to display the plot
     st.pyplot(fig)
+    image.close()
 
 
+@st.cache(allow_output_mutation=True)
 def main_loop():
     st.title("Plastic-optics Insight")
     st.subheader("This app allows you to locate landfills from satellite images")
-    
+
     st.sidebar.title("Options")
     app_mode = st.sidebar.selectbox("Choose the mode", 
                                     ["Segmentation", "Classification", "Model Inspection"])

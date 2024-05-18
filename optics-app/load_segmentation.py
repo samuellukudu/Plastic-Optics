@@ -91,7 +91,7 @@ def create_model(params):
     )
     return model.to(params['device'])
 
-
+@st.cache(allow_output_mutation=True)
 def load_model_weights(weight_path):
     model = create_model(PARAMS)
     weights = torch.load(weight_path, map_location=torch.device("cpu"))
