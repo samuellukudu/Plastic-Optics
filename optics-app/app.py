@@ -93,8 +93,9 @@ def visualize_predictions(image, mask):
 
 
 def main_loop():
-    st.title("Plastic-optics segmentation")
-    st.subheader("This app allows you to find landfills in a given scene")
+    st.title("Plastic-optics Insight")
+    st.subheader("This app allows you to locate landfills from satellite images")
+    
     st.sidebar.title("Options")
     app_mode = st.sidebar.selectbox("Choose the mode", 
                                     ["Segmentation", "Classification", "Model Inspection"])
