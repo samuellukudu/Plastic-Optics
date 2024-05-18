@@ -1,4 +1,6 @@
-/home/samu2505/HACKATHONS/Plastic-Optics/optics-env
+# /home/samu2505/HACKATHONS/Plastic-Optics/optics-env
+# Virtual environment
+optics-env/
 .env
 __pycache__/
 *.py[cod]
