@@ -14,14 +14,13 @@ import torch.nn.functional as F
 from torch import utils
 import torchvision
 from torchvision import transforms as T
-
+import streamlit as st
 # from dotenv import load_dotenv
 import wandb
-
 # load_dotenv()
-
-api_key = os.getenv("WANDB_API_KEY")
-wandb.login()
+# api_key = os.getenv("WANDB_API_KEY")
+api_key = st.secrets["WANDB_API_KEY"]
+wandb.login(key=api_key)
 
 os.environ['WANDB_MODE'] = 'offline'
 
