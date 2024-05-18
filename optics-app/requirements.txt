@@ -1,0 +1,6 @@
+torch==2.3.0
+wandb==0.17.0
+segmentation-models-pytorch==0.3.3
+opencv-python-headless
+streamlit==1.34.0
+python-dotenv==1.0.1
