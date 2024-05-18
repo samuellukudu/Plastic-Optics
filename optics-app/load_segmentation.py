@@ -15,13 +15,13 @@ from torch import utils
 import torchvision
 from torchvision import transforms as T
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import wandb
 
-load_dotenv()
+# load_dotenv()
 
-api_key = os.getenv("WANDB")
-wandb.login(key=api_key)
+api_key = os.getenv("WANDB_API_KEY")
+wandb.login()
 
 os.environ['WANDB_MODE'] = 'offline'
 
