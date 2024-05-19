@@ -48,10 +48,8 @@ def seeding(SEED):
         torch.cuda.manual_seed_all(SEED)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-#     os.environ['TF_CUDNN_DETERMINISTIC'] = str(SEED)
-#     tf.random.set_seed(SEED)
-#     keras.utils.set_random_seed(seed=SEED)
     print('seeding done!!!')
+
 
 def flush():
     gc.collect()
@@ -89,14 +87,12 @@ def create_model(params):
         classes=params['num_classes'],
         activation=None
     )
-    return model.to(params['device'])
+    return model.to(params['device']).half()
 
-@st.cache(allow_output_mutation=True)
+
+@st.cache_resource
 def load_model_weights(weight_path):
     model = create_model(PARAMS)
     weights = torch.load(weight_path, map_location=torch.device("cpu"))
     model.load_state_dict(weights)
     return model
-
-# In save model weights
-# torch.save(model.state_dict(), 'model_weights.pth')

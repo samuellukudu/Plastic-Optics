@@ -24,15 +24,6 @@ from torchvision import transforms as T
 import streamlit as st
 
 PARAMS = {
-    "device": torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    "encoder": "resnext50_32x4d",
-    "encoder_weights": "imagenet",
-    "num_classes": 22,
-    "in_channels": 3,
-    "batch_size": 4,
-    "num_workers": 0,
-    "epochs": 100,
-    "lr": 3e-4,
     "img_size": [512, 512],
     "seed": 2024,
 }
@@ -50,7 +41,7 @@ tsfm = T.Compose([
                 std=[0.229, 0.224, 0.225])
 ])
 
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def inference_pipeline(img_path, transform=tsfm):
     image = PIL.Image.open(img_path)
     tensor_image = transform(image).unsqueeze(0)
@@ -91,10 +82,8 @@ def visualize_predictions(image, mask):
 
     # Use Streamlit's function to display the plot
     st.pyplot(fig)
-    image.close()
 
 
-@st.cache(allow_output_mutation=True)
 def main_loop():
     st.title("Plastic-optics Insight")
     st.subheader("This app allows you to locate landfills from satellite images")
@@ -116,6 +105,9 @@ def main_loop():
     elif app_mode == "Model Inspection":
         st.sidebar.text("Model inspection with GradCAM will be shown here.")
         # TODO: Implement GradCAM functionality
+    del image, mask
+    gc.collect()
 
 if __name__ == "__main__":
     main_loop()
+    
