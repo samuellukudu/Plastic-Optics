@@ -109,5 +109,6 @@ def main_loop():
     gc.collect()
 
 if __name__ == "__main__":
+    gc.collect()
     main_loop()
     
