@@ -87,7 +87,7 @@ def create_model(params):
         classes=params['num_classes'],
         activation=None
     )
-    return model.to(params['device']).half()
+    return model.to(params['device'])
 
 
 @st.cache_resource
