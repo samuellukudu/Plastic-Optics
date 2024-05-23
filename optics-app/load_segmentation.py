@@ -27,7 +27,7 @@ os.environ['WANDB_MODE'] = 'offline'
 PARAMS = {
     "device": torch.device("cuda") if torch.cuda.is_available() else "cpu",
     "encoder": "resnext50_32x4d",
-    "encoder_weights": "imagenet",
+    "encoder_weights": None, # None, 'imagenet'
     "num_classes": 22,
     "in_channels": 3,
     "batch_size": 4,
