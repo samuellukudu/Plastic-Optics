@@ -12,7 +12,8 @@ import cv2
 import PIL
 import matplotlib.pyplot as plt
 
-from load_segmentation import load_model_weights
+from segmentation import load_seg_model_weights
+from multi_task import load_multi_task_model
 
 import torch
 import torch.nn as nn
@@ -26,13 +27,21 @@ import streamlit as st
 PARAMS = {
     "img_size": [512, 512],
     "seed": 2024,
+    "multi_encoder": "resnet18",
 }
 
-# Continue with your program using the local artifact directory
-seg_model_dir = f'{os.getcwd()}/artifact'
-weights_path = glob.glob(f"{seg_model_dir}/*.pth")
+SEVERITY = [1, 2, 0, 3]
+SITES = ['Degraded area', 'Production site', 'Agricultural area/farm area', 'Other', 'Abandoned area', 'Non production building']
 
-model = load_model_weights(weight_path=weights_path[0])
+# load segmentation model weights 
+seg_model_dir = f'{os.getcwd()}/segmentation_artifact'
+seg_weight_path = glob.glob(f"{seg_model_dir}/*.pth")[0]
+seg_model = load_seg_model_weights(weight_path=seg_weight_path)
+
+# load multi-task segmentation model weights
+multi_task_dir = f'{os.getcwd()}/multi-task-artifacts'
+multi_task_path = glob.glob(f"{multi_task_dir}/*.pth")[0]
+multi_model = load_multi_task_model(weight_path=multi_task_path, name=PARAMS["multi_encoder"])
 
 tsfm = T.Compose([
     T.Resize(PARAMS['img_size']),
@@ -41,8 +50,9 @@ tsfm = T.Compose([
                 std=[0.229, 0.224, 0.225])
 ])
 
+
 @st.cache_resource
-def inference_pipeline(img_path, transform=tsfm):
+def multi_task_inference(img_path, transform=tsfm):
     image = PIL.Image.open(img_path)
     tensor_image = transform(image).unsqueeze(0)
 
@@ -50,9 +60,72 @@ def inference_pipeline(img_path, transform=tsfm):
     if image.mode != 'RGB':
         image = image.convert('RGB')
 
-    model.eval()
+    multi_model.eval()
     with torch.no_grad():
-        logits = model(tensor_image)
+        site_logits, severe_logits = multi_model(tensor_image)
+        
+    return site_logits, severe_logits
+
+
+def visualize_severe(image, severe_logits):
+    probas = severe_logits.softmax(dim=-1).detach().numpy().squeeze()
+    total = np.arange(len(SEVERITY))
+
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Display the image
+    ax[0].imshow(image)
+    ax[0].axis('off')  # Turn off axis
+
+    # Plot the probabilities bar chart
+    ax[1].barh(total, probas, align='center')
+    ax[1].set_yticks(total)
+    ax[1].set_yticklabels(SEVERITY)
+    ax[1].invert_yaxis()  # labels read top-to-bottom
+    ax[1].set_xlabel('Probability')
+    ax[1].set_title('Severity Prediction')
+
+    plt.tight_layout()
+    # plt.show()
+    # Use Streamlit's function to display the plot
+    st.pyplot(fig)
+
+
+def visualize_sites(image, site_logits):
+    probas = site_logits.softmax(dim=-1).detach().numpy().squeeze()
+    total = np.arange(len(SITES))
+
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Display the image
+    ax[0].imshow(image)
+    ax[0].axis('off')  # Turn off axis
+
+    # Plot the probabilities bar chart
+    ax[1].barh(total, probas, align='center')
+    ax[1].set_yticks(total)
+    ax[1].set_yticklabels(SITES)
+    ax[1].invert_yaxis()  # labels read top-to-bottom
+    ax[1].set_xlabel('Probability')
+    ax[1].set_title('Site Type predictions')
+
+    plt.tight_layout()
+    # plt.show()
+    st.pyplot(fig)
+
+
+@st.cache_resource
+def seg_inference_pipeline(img_path, transform=tsfm):
+    image = PIL.Image.open(img_path)
+    tensor_image = transform(image).unsqueeze(0)
+
+    # Convert the image to RGB if it's not already
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    seg_model.eval()
+    with torch.no_grad():
+        logits = seg_model(tensor_image)
 
     activated = F.softmax(logits, dim=1)
     mask = torch.argmax(activated, dim=1)
@@ -90,22 +163,31 @@ def main_loop():
 
     st.sidebar.title("Options")
     app_mode = st.sidebar.selectbox("Choose the mode", 
-                                    ["Segmentation", "Classification", "Model Inspection"])
+                                    ["Locate landfills", "Model Inspection"])
 
     image_file = st.file_uploader("upload your image", type=["jpg", "png", "jpeg"])
     if not image_file:
         return None
     
-    if app_mode == "Segmentation":
-        image, mask = inference_pipeline(img_path=image_file)
+
+    if app_mode == "Locate landfills":
+        image, mask = seg_inference_pipeline(img_path=image_file)
+        
+        st.subheader("Segmentation results")
         visualize_predictions(image=image, mask=mask)
-    elif app_mode == "Classification":
-        st.sidebar.text("Classification results will be shown here.")
-        # TODO: Implement classification functionality
+        site_logits, severe_logits = multi_task_inference(img_path=image_file)
+        
+        st.subheader("Severity of landfills")
+        visualize_severe(image=image, severe_logits=severe_logits)
+        
+        st.subheader("Site where landfills are located")
+        visualize_sites(image=image, site_logits=site_logits)
+
     elif app_mode == "Model Inspection":
         st.sidebar.text("Model inspection with GradCAM will be shown here.")
         # TODO: Implement GradCAM functionality
-    del image, mask
+
+    
     gc.collect()
 
 if __name__ == "__main__":
