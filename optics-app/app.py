@@ -12,6 +12,8 @@ from segmentation import load_seg_model_weights
 from multi_task import load_multi_task_model
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import transforms as T
 
 import streamlit as st
