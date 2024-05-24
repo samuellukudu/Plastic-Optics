@@ -1,11 +1,7 @@
-import os, gc, sys, yaml, json, copy
+import os, gc
 from pathlib import Path
-from collections import defaultdict
 import glob
-from tqdm.auto import tqdm
 
-import math
-import random
 import numpy as np
 
 import cv2
@@ -16,10 +12,6 @@ from segmentation import load_seg_model_weights
 from multi_task import load_multi_task_model
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch import utils
-import torchvision
 from torchvision import transforms as T
 
 import streamlit as st
@@ -86,9 +78,8 @@ def visualize_severe(image, severe_logits):
     ax[1].set_title('Severity Prediction')
 
     plt.tight_layout()
-    # plt.show()
-    # Use Streamlit's function to display the plot
     st.pyplot(fig)
+    gc.collect()
 
 
 def visualize_sites(image, site_logits):
@@ -110,8 +101,8 @@ def visualize_sites(image, site_logits):
     ax[1].set_title('Site Type predictions')
 
     plt.tight_layout()
-    # plt.show()
     st.pyplot(fig)
+    gc.collect()
 
 
 @st.cache_resource
@@ -155,6 +146,7 @@ def visualize_predictions(image, mask):
 
     # Use Streamlit's function to display the plot
     st.pyplot(fig)
+    gc.collect()
 
 
 def main_loop():
