@@ -28,7 +28,7 @@ os.environ['WANDB_MODE'] = 'offline'
 
 PARAMS = {
     "device": torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    "encoder": "resnet18",
+    "encoder": "resnet34",
     "num_classes": 22,
     "in_channels": 3,
     "batch_size": 4,
@@ -64,7 +64,7 @@ seeding(PARAMS['seed'])
 run = wandb.init()
 
 # Define the artifact name and type
-artifact_name = 'samu2505/PlasticOpticsMultiClassification/aerialMultiFPNModel_fold_0:v0'
+artifact_name = 'samu2505/PlasticOpticsMultiClassification/aerialMultiFPNModel_fold_0:v20'
 artifact_type = 'model'
 
 # Define the local directory to save the artifact

@@ -21,7 +21,7 @@ import streamlit as st
 PARAMS = {
     "img_size": [512, 512],
     "seed": 2024,
-    "multi_encoder": "resnet18",
+    "multi_encoder": "resnet34",
 }
 
 SEVERITY = [1, 2, 0, 3]
@@ -166,16 +166,16 @@ def main_loop():
 
     if app_mode == "Locate landfills":
         image, mask = seg_inference_pipeline(img_path=image_file)
-        
-        st.subheader("Segmentation results")
-        visualize_predictions(image=image, mask=mask)
         site_logits, severe_logits = multi_task_inference(img_path=image_file)
-        
-        st.subheader("Severity of landfills")
-        visualize_severe(image=image, severe_logits=severe_logits)
         
         st.subheader("Site where landfills are located")
         visualize_sites(image=image, site_logits=site_logits)
+
+        st.subheader("Spread of landfill")
+        visualize_predictions(image=image, mask=mask)
+        
+        st.subheader("Severity of landfills")
+        visualize_severe(image=image, severe_logits=severe_logits)
 
     elif app_mode == "Model Inspection":
         st.sidebar.text("Model inspection with GradCAM will be shown here.")
