@@ -8,4 +8,6 @@ __pycache__/
 # WandB
 wandb/
 artifact/
+segmentation_artifact/
+multi-task-artifacts/
 .streamlit/.secrets.toml
