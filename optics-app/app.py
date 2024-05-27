@@ -8,6 +8,7 @@ import cv2
 import PIL
 import matplotlib.pyplot as plt
 
+from binary_classifier import load_binary_model
 from segmentation import load_seg_model_weights
 from multi_task import load_multi_task_model
 
@@ -22,10 +23,16 @@ PARAMS = {
     "img_size": [512, 512],
     "seed": 2024,
     "multi_encoder": "resnet34",
+    "binary_encoder": "efficientnet_b0.ra_in1k",
 }
 
 SEVERITY = [1, 2, 0, 3]
 SITES = ['Degraded area', 'Production site', 'Agricultural area/farm area', 'Other', 'Abandoned area', 'Non production building']
+
+# load binary model weights
+bin_model_dir = f"{os.getcwd()}/binary-artifacts"
+bin_weight_path = glob.glob(f"{bin_model_dir}/*.pth")[0]
+bin_model = load_binary_model(weight_path=bin_weight_path, name=PARAMS["binary_encoder"])
 
 # load segmentation model weights 
 seg_model_dir = f'{os.getcwd()}/segmentation_artifact'
@@ -44,6 +51,21 @@ tsfm = T.Compose([
                 std=[0.229, 0.224, 0.225])
 ])
 
+@st.cache_resource
+def binary_inference(img_path, transform=tsfm):
+    image = PIL.Image.open(img_path)
+    tensor_image = transform(image).unsqueeze(0)
+
+    # Convert the image to RGB if it's not already
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    bin_model.eval()
+    with torch.no_grad():
+        logits = bin_model(tensor_image)
+        
+    return logits.sigmoid().squeeze().tolist()
+
 
 @st.cache_resource
 def multi_task_inference(img_path, transform=tsfm):
@@ -59,6 +81,19 @@ def multi_task_inference(img_path, transform=tsfm):
         site_logits, severe_logits = multi_model(tensor_image)
         
     return site_logits, severe_logits
+
+
+def visualize_binary_predictions(image, logits):
+    color = "green" if logits >= 0.5 else "red"
+    fig = plt.figure(figsize=(8, 5))
+    plt.imshow(image)
+    plt.axis("off")
+    plt.ylabel("Probability")
+    plt.title(f"Prediction: {logits:.4f}", color=color)
+    plt.tight_layout()
+    st.pyplot(fig)
+    gc.collect()
+
 
 
 def visualize_severe(image, severe_logits):
@@ -167,7 +202,11 @@ def main_loop():
     if app_mode == "Locate landfills":
         image, mask = seg_inference_pipeline(img_path=image_file)
         site_logits, severe_logits = multi_task_inference(img_path=image_file)
-        
+        bin_logits = binary_inference(img_path=image_file)
+
+        st.subheader(f"Landfill detected with probability: {bin_logits:.4f}")
+        visualize_binary_predictions(image=image, logits=bin_logits)
+
         st.subheader("Site where landfills are located")
         visualize_sites(image=image, site_logits=site_logits)
 

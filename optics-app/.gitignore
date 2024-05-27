@@ -10,4 +10,5 @@ wandb/
 artifact/
 segmentation_artifact/
 multi-task-artifacts/
+binary-artifacts/
 .streamlit/.secrets.toml

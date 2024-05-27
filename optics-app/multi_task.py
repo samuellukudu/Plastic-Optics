@@ -1,13 +1,11 @@
-import os, gc, sys, yaml, json, copy
+import os, gc, sys
 from pathlib import Path
-from collections import defaultdict
 import glob
 
 import math
 import random
 import numpy as np
 
-import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
